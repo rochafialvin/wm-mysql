@@ -1,7 +1,7 @@
 const conn = require('../config/mysql.js')
 const router = require('express').Router()
 
-
+// REGISTER USER
 router.post('/register', (req, res) => {
    const {username, name, email, password} = req.body
    // Query insert data
@@ -24,3 +24,5 @@ router.post('/register', (req, res) => {
 })
 
 module.exports = router
+
+
