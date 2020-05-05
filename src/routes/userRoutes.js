@@ -1,21 +1,33 @@
 const conn = require('../config/mysql.js')
 const router = require('express').Router()
 const verifSendEmail = require('../config/verifSendEmail')
+const bcrypt = require('bcrypt')
+const validator = require('validator')
 
 // REGISTER USER
 router.post('/register', (req, res) => {
-   const {username, name, email, password} = req.body
+   // req.body = {username, name, email, password}
+
    // Query insert data
-   const sql = `INSERT INTO users(username, name, email, password) VALUES ('${username}', '${name}', '${email}', '${password}')`
+   const sql = `INSERT INTO users SET ?`
+   const data = req.body
 
+   // Chek format email
+   // valid = true or false
+   let valid = validator.isEmail(data.email)
+   if(!valid) return res.send('Email tidak valid')
 
+   // Hash password
+   data.password = bcrypt.hashSync(data.password, 8)
+   
+   
    // Running query
-   conn.query(sql, (err, result) => {
+   conn.query(sql, data, (err, result) => {
       // Jika ada error kita akan kirim object errornya
       if(err) return res.send(err)
 
       // Kirim email verifikasi
-      verifSendEmail(name, email, result.insertId)
+      verifSendEmail(data.name, data.email, result.insertId)
 
       // Jika berhasil, kirim object
       res.send({
@@ -35,6 +47,11 @@ router.get('/verify/:userid', (req, res) => {
 
       res.send('<h1>Verikasi Berhasil</h1>')
    })
+})
+
+// LOGIN USER
+router.post('/user/login', (req, res) => {
+
 })
 
 module.exports = router
