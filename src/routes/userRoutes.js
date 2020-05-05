@@ -20,7 +20,6 @@ router.post('/register', (req, res) => {
    // Hash password
    data.password = bcrypt.hashSync(data.password, 8)
    
-   
    // Running query
    conn.query(sql, data, (err, result) => {
       // Jika ada error kita akan kirim object errornya
@@ -51,7 +50,36 @@ router.get('/verify/:userid', (req, res) => {
 
 // LOGIN USER
 router.post('/user/login', (req, res) => {
+   const {username, password} = req.body
 
+   const sql = `SELECT * FROM users WHERE username = '${username}'`
+
+   conn.query(sql, (err, result) => {
+      // Cek error
+      if(err) return res.send(err)
+
+      // result = [ {} ]
+      let user = result[0]
+      // Jika username tidak ditemukan
+      if(!user) return res.send('username tidak ditemukan')
+      // Verifikasi password
+      let validPassword = bcrypt.compareSync(password, user.password)
+      // Jika user memasukkan password yang salah
+      if(!validPassword) return res.send('password tidak valid')
+      // Verikasi status verified
+      if(!user.verified) return res.send('Anda belum terverifikasi')
+
+      // Menghapus beberapa property
+      delete user.password
+      delete user.avatar
+      delete user.verified
+
+      res.send({
+         message: 'Login berhasil',
+         user
+      })
+
+   })
 })
 
 module.exports = router

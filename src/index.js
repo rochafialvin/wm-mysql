@@ -4,9 +4,11 @@ const port = 2020
 
 // Routes
 const userRouter = require('./routes/userRoutes')
+const todoRouter = require('./routes/todoRoutes')
 
 app.use(express.json())
 app.use(userRouter)
+app.use(todoRouter)
 
 
 app.get('/', (req, res) => {
