@@ -35,7 +35,7 @@ router.post('/user/avatar', upload.single('avatar'), async (req, res) => {
       const data = [fileName, req.body.username]
 
       // Menyimpan foto di folder
-      await sharp(req.file.buffer).png().toFile(`${filesDirectory}/${fileName}`)
+      await sharp(req.file.buffer).resize(300).png().toFile(`${filesDirectory}/${fileName}`)
 
       // Simpan nama avata di kolom 'avatar'
       conn.query(sql, data, (err, result) => {
@@ -54,6 +54,37 @@ router.post('/user/avatar', upload.single('avatar'), async (req, res) => {
 }, (err, req, res, next) => {
    // Jika terdapat masalah terhadap multer, kita akan kirimkan error
    res.send(err)
+})
+
+// GET AVATAR
+router.get('/user/avatar/:username', (req, res) => {
+   // Menyimpan username pada variable
+   const username = req.params.username
+
+   // Cari nama file di database
+   const sql = `SELECT avatar FROM users WHERE username = '${username}'`
+
+   // Kirim file ke client
+   conn.query(sql, (err, result) => {
+
+      // Jika ada error saat running sql
+      if(err) return res.send(err)
+
+      // Nama file avatar
+      const fileName = result[0].avatar
+      // Object options yang menentukan dimana letak avatar disimpan
+      const options = {
+         root: filesDirectory
+      }
+
+      // Mengirim file sebagai respon
+      res.sendFile(fileName, options, (err) => {
+         // Mengirim object error jika terjadi masalah
+         if(err) return res.send(err)
+
+         console.log('berhasil terkirim')
+      })
+   })
 })
 
 
