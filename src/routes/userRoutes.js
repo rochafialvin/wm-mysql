@@ -1,11 +1,12 @@
 const conn = require('../config/mysql.js')
 const router = require('express').Router()
 const verifSendEmail = require('../config/verifSendEmail')
-const bcrypt = require('bcrypt')
 const validator = require('validator')
+const bcrypt = require('bcrypt')
 const multer = require('multer')
 const sharp = require('sharp')
 const path = require('path')
+const jwt = require('jsonwebtoken')
 
 
 const upload = multer({
@@ -23,8 +24,27 @@ const upload = multer({
 
 const filesDirectory = path.join(__dirname, '../files')
 
+// Function Authentication
+const auth = (req, res, next) => {
+   // Mengambil token saat proses menerima request
+   let token = req.header('Authorization')
+   // Mencoba mengambil data asli yang tersimpan di dalam token
+   let decoded = jwt.verify(token, 'fresh-rain890')
+   // Didalam token ada id user, selanjutnya di gunakan untuk mengambil data user di database
+   let sql = `SELECT id, username, name, email, avatar FROM users WHERE id = ${decoded.id}`
+
+   conn.query(sql, (err, result) => {
+      if(err) return res.send(err)
+      // informasi user disimpan ke object 'req' di property 'user'
+      req.user = result[0]
+      // Untuk melanjutkan ke proses berikutnya (proses utama)
+      next()
+   })
+
+}
+
 // UPLOAD AVATAR
-router.post('/user/avatar', upload.single('avatar'), async (req, res) => {
+router.post('/user/avatar', auth, upload.single('avatar'), async (req, res) => {
 
    try {
       // const fileName = `${req.body.username}-avatar.png`
@@ -70,20 +90,35 @@ router.get('/user/avatar/:username', (req, res) => {
       // Jika ada error saat running sql
       if(err) return res.send(err)
 
-      // Nama file avatar
-      const fileName = result[0].avatar
-      // Object options yang menentukan dimana letak avatar disimpan
-      const options = {
-         root: filesDirectory
+      
+      try {
+         // Nama file avatar
+         const fileName = result[0].avatar
+         // Object options yang menentukan dimana letak avatar disimpan
+         const options = {
+            root: filesDirectory
+         }
+
+         // Mengirim file sebagai respon
+         // alamatFolder/namaFile, cbfunction
+         res.sendFile(`${filesDirectory}/${fileName}`, (err) => {
+            // Mengirim object error jika terjadi masalah
+            if(err) return res.send(err)
+
+
+         })
+      } catch (err) {
+         res.send(err)
       }
 
-      // Mengirim file sebagai respon
-      res.sendFile(fileName, options, (err) => {
-         // Mengirim object error jika terjadi masalah
-         if(err) return res.send(err)
+   })
+})
 
-         console.log('berhasil terkirim')
-      })
+// UPDATE USER
+router.patch('/user/profile', auth, (req, res) => {
+   res.send({
+      message: 'Berikut isi req.user',
+      user: req.user
    })
 })
 
@@ -137,6 +172,8 @@ router.post('/user/login', (req, res) => {
    const {username, password} = req.body
 
    const sql = `SELECT * FROM users WHERE username = '${username}'`
+   const sql2 = `INSERT INTO tokens SET ?`
+   
 
    conn.query(sql, (err, result) => {
       // Cek error
@@ -152,19 +189,30 @@ router.post('/user/login', (req, res) => {
       if(!validPassword) return res.send('password tidak valid')
       // Verikasi status verified
       if(!user.verified) return res.send('Anda belum terverifikasi')
+      // Membuat token
+      let token = jwt.sign({ id: user.id}, 'fresh-rain890')
+      // Property user_id dan token merupakan nama kolom yang ada di tabel 'tokens'
+      const data = {user_id : user.id, token : token}
 
-      // Menghapus beberapa property
-      delete user.password
-      delete user.avatar
-      delete user.verified
+      conn.query(sql2, data, (err, result) => {
+         if(err) return res.send(err)
 
-      res.send({
-         message: 'Login berhasil',
-         user
+         // Menghapus beberapa property
+         delete user.password
+         delete user.avatar
+         delete user.verified
+
+         res.send({
+            message: 'Login berhasil',
+            user,
+            token
+         })
       })
 
    })
 })
+
+
 
 module.exports = router
 
