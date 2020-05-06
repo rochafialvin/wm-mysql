@@ -27,14 +27,18 @@ const filesDirectory = path.join(__dirname, '../files')
 router.post('/user/avatar', upload.single('avatar'), async (req, res) => {
 
    try {
-      const avatar = `${req.body.username}-avatar.png`
-      const sql = `UPDATE users SET avatar = '${avatar}' WHERE username = '${req.body.username}'`
+      // const fileName = `${req.body.username}-avatar.png`
+      // const sql = `UPDATE users SET avatar = '${avatar}' WHERE username = '${req.body.username}'`
+
+      const fileName = `${req.body.username}-avatar.png`
+      const sql = `UPDATE users SET avatar = ? WHERE username = ?`
+      const data = [fileName, req.body.username]
 
       // Menyimpan foto di folder
-      await sharp(req.file.buffer).png().toFile(`${filesDirectory}/${avatar}`)
+      await sharp(req.file.buffer).png().toFile(`${filesDirectory}/${fileName}`)
 
       // Simpan nama avata di kolom 'avatar'
-      conn.query(sql, (err, result) => {
+      conn.query(sql, data, (err, result) => {
          // Jika ada error saat running sql
          if(err) return res.send(err)
 
