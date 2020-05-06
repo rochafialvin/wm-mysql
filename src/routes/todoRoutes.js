@@ -21,6 +21,16 @@ router.post('/user/todo', (req, res) => {
 
 // Exercise
 // Read todo
+router.get('/user/todo/:userid', (req, res) => {
+   const sql = `SELECT * FROM todos WHERE user_id = ?`
+   const data = req.params.userid
+
+   conn.query(sql, data, (err, result) => {
+      if(err) return res.send(err.sqlMessage)
+
+      res.send(result)
+   })
+})
 
 // Update todo
 router.patch('/user/todo/:todoid', (req, res) => {

@@ -3,6 +3,55 @@ const router = require('express').Router()
 const verifSendEmail = require('../config/verifSendEmail')
 const bcrypt = require('bcrypt')
 const validator = require('validator')
+const multer = require('multer')
+const sharp = require('sharp')
+const path = require('path')
+
+
+const upload = multer({
+   limits: {
+       fileSize: 10000000 // Byte , default 1MB
+   },
+   fileFilter(req, file, cb) {
+       if(!file.originalname.match(/\.(jpg|jpeg|png)$/)){ // will be error if the extension name is not one of these
+           return cb(new Error('Please upload image file (jpg, jpeg, or png)')) 
+       }
+
+       cb(undefined, true)
+   }
+})
+
+const filesDirectory = path.join(__dirname, '../files')
+
+// UPLOAD AVATAR
+router.post('/user/avatar', upload.single('avatar'), async (req, res) => {
+
+   try {
+      const avatar = `${req.body.username}-avatar.png`
+      const sql = `UPDATE users SET avatar = '${avatar}' WHERE username = '${req.body.username}'`
+
+      // Menyimpan foto di folder
+      await sharp(req.file.buffer).png().toFile(`${filesDirectory}/${avatar}`)
+
+      // Simpan nama avata di kolom 'avatar'
+      conn.query(sql, (err, result) => {
+         // Jika ada error saat running sql
+         if(err) return res.send(err)
+
+         // Simpan nama fotonya di database
+         res.send({ message: 'Berhasil di upload' })
+      })
+
+      
+   } catch (err) {
+      res.send(err.message)
+   }
+
+}, (err, req, res, next) => {
+   // Jika terdapat masalah terhadap multer, kita akan kirimkan error
+   res.send(err)
+})
+
 
 // REGISTER USER
 router.post('/register', (req, res) => {
