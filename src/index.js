@@ -73,7 +73,14 @@ app.delete('/tombolget/:tombolid', (req, res) => {
    })
 })
 
+// STATUS
+app.get('/status', (req, res) => {
+   // 2xx
+   // res.status(200).send({ message : 'Berhasil' })
 
+   // 4xx / 3xx
+   res.status(404).send({ message : 'Gagal' })
+})
 
 
 
