@@ -45,6 +45,41 @@ app.post('/tombolget/:tombolid', (req, res) => {
    })
 })
 
+// PATCH
+app.patch('/tombolget/:tombolid', (req, res) => {
+   res.send({
+      // Auth Token
+      authorization : req.header('Authorization'),
+      // { username : "Karen" } 
+      query : req.query,
+      // { tombolid : 15 }                           
+      params: req.params,
+      // { description : "Winter Soldier" }
+      body: req.body                          
+   })
+})
+
+// DELETE
+app.delete('/tombolget/:tombolid', (req, res) => {
+   res.send({
+      // Auth Token
+      authorization : req.header('Authorization'),
+      // { username : "Karen" } 
+      query : req.query,
+      // { tombolid : 15 }                           
+      params: req.params,
+      // { description : "Winter Soldier" }
+      body: req.body                          
+   })
+})
+
+
+
+
+
+
+
+
 
 
 
