@@ -1,0 +1,19 @@
+RESTful API
+---
+Sebuah gaya / aturan penulisan dalam merancang sebuah API.
+
+1. Stateless
+   Pada API kita tidak menyimpan session user yang mengakses
+
+2. Authentication pada setiap request
+   Menggunakan token (json web token)
+
+3. Data yang dikirim atau diterima itu dalam bentuk JSON.
+
+4. Menggunakan semua method HTTP
+   GET            
+   POST
+   PUT / PATCH
+   DELETE
+
+5. Menggunakan kode status

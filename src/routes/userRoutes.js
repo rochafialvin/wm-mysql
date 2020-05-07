@@ -42,15 +42,15 @@ router.post('/user/avatar', auth, upload.single('avatar'), async (req, res) => {
       // Simpan nama avata di kolom 'avatar'
       conn.query(sql, data, (err, result) => {
          // Jika ada error saat running sql
-         if(err) return res.send(err)
+         if(err) return res.status(500).send(err)
 
          // Simpan nama fotonya di database
-         res.send({ message: 'Berhasil di upload' })
+         res.status(201).send({ message: 'Berhasil di upload' })
       })
 
       
    } catch (err) {
-      res.send(err.message)
+      res.status(500).send(err.message)
    }
 
 }, (err, req, res, next) => {
@@ -64,7 +64,7 @@ router.post('/user/avatar', auth, upload.single('avatar'), async (req, res) => {
 
 // GET PROFILE
 router.get('/user/profile', auth, (req, res) => {
-   res.send(req.user)
+   res.status(200).send(req.user)
 })
 
 // GET AVATAR
