@@ -1,4 +1,4 @@
-const conn = require('../config/mysql.js')
+const conn = require('../config/database')
 const router = require('express').Router()
 const verifSendEmail = require('../config/verifSendEmail')
 const validator = require('validator')
@@ -7,6 +7,7 @@ const multer = require('multer')
 const sharp = require('sharp')
 const path = require('path')
 const jwt = require('jsonwebtoken')
+const auth = require('../config/auth')
 
 
 const upload = multer({
@@ -23,25 +24,6 @@ const upload = multer({
 })
 
 const filesDirectory = path.join(__dirname, '../files')
-
-// Function Authentication
-const auth = (req, res, next) => {
-   // Mengambil token saat proses menerima request
-   let token = req.header('Authorization')
-   // Mencoba mengambil data asli yang tersimpan di dalam token
-   let decoded = jwt.verify(token, 'fresh-rain890')
-   // Didalam token ada id user, selanjutnya di gunakan untuk mengambil data user di database
-   let sql = `SELECT id, username, name, email, avatar FROM users WHERE id = ${decoded.id}`
-
-   conn.query(sql, (err, result) => {
-      if(err) return res.send(err)
-      // informasi user disimpan ke object 'req' di property 'user'
-      req.user = result[0]
-      // Untuk melanjutkan ke proses berikutnya (proses utama)
-      next()
-   })
-
-}
 
 // UPLOAD AVATAR
 router.post('/user/avatar', auth, upload.single('avatar'), async (req, res) => {
@@ -74,6 +56,15 @@ router.post('/user/avatar', auth, upload.single('avatar'), async (req, res) => {
 }, (err, req, res, next) => {
    // Jika terdapat masalah terhadap multer, kita akan kirimkan error
    res.send(err)
+})
+
+////////////
+// G E T //
+///////////
+
+// GET PROFILE
+router.get('/user/profile', auth, (req, res) => {
+   res.send(req.user)
 })
 
 // GET AVATAR
@@ -114,14 +105,20 @@ router.get('/user/avatar/:username', (req, res) => {
    })
 })
 
-// UPDATE USER
-router.patch('/user/profile', auth, (req, res) => {
-   res.send({
-      message: 'Berikut isi req.user',
-      user: req.user
+// VERIFY EMAIL
+router.get('/verify/:userid', (req, res) => {
+   const sql = `UPDATE users SET verified = true WHERE id = ${req.params.userid}`
+
+   conn.query(sql, (err, result) => {
+      if(err) return res.send(err.sqlMessage)
+
+      res.send('<h1>Verikasi Berhasil</h1>')
    })
 })
 
+/////////////
+// P O S T //
+////////////
 
 // REGISTER USER
 router.post('/register', (req, res) => {
@@ -154,17 +151,6 @@ router.post('/register', (req, res) => {
 
    })
 
-})
-
-// VERIFY EMAIL
-router.get('/verify/:userid', (req, res) => {
-   const sql = `UPDATE users SET verified = true WHERE id = ${req.params.userid}`
-
-   conn.query(sql, (err, result) => {
-      if(err) return res.send(err.sqlMessage)
-
-      res.send('<h1>Verikasi Berhasil</h1>')
-   })
 })
 
 // LOGIN USER
@@ -211,6 +197,32 @@ router.post('/user/login', (req, res) => {
 
    })
 })
+
+///////////////
+// P A T C H //
+///////////////
+
+// UPDATE USER
+router.patch('/user/profile', auth, (req, res) => {
+   const sql = `UPDATE users SET ? WHERE id = ? `
+   const data = [req.body, req.user.id]
+   // hash => Asynchronous , then catch, async await
+   // hashSync =>  Synchronous
+                      
+   if(req.body.password) req.body.password = bcrypt.hashSync(req.body.password, 8) 
+
+   conn.query(sql, data, (err, result) => {
+      if(err) return res.send(err)
+
+      res.send({
+         message : "Update berhasil",
+         result
+      })
+   })
+})
+
+
+
 
 
 

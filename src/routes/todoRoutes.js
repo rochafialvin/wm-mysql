@@ -1,4 +1,4 @@
-const conn = require('../config/mysql.js')
+const conn = require('../config/database')
 const router = require('express').Router()
 
 // Create todo
