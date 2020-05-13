@@ -139,13 +139,13 @@ router.post('/register', (req, res) => {
    // Running query
    conn.query(sql, data, (err, result) => {
       // Jika ada error kita akan kirim object errornya
-      if(err) return res.send(err)
+      if(err) return res.status(500).send(err)
 
       // Kirim email verifikasi
       verifSendEmail(data.name, data.email, result.insertId)
 
       // Jika berhasil, kirim object
-      res.send({
+      res.status(201).send({
          message: 'Register berhasil'
       })
 

@@ -1,10 +1,10 @@
 const mysql = require('mysql')
 
 const conn = mysql.createConnection({
-   user: 'rochafi_teach',
+   user: 'root',
    password: 'Mysql123',
-   host: 'db4free.net',
-   database: 'rochafi_bks',
+   host: 'localhost',
+   database: 'bks_mysql',
    port: 3306
 })
 
