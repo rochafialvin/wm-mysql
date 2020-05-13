@@ -32,9 +32,9 @@ router.post('/user/avatar', auth, upload.single('avatar'), async (req, res) => {
       // const fileName = `${req.body.username}-avatar.png`
       // const sql = `UPDATE users SET avatar = '${avatar}' WHERE username = '${req.body.username}'`
 
-      const fileName = `${req.body.username}-avatar.png`
+      const fileName = `${req.user.username}-avatar.png`
       const sql = `UPDATE users SET avatar = ? WHERE username = ?`
-      const data = [fileName, req.body.username]
+      const data = [fileName, req.user.username]
 
       // Menyimpan foto di folder
       await sharp(req.file.buffer).resize(300).png().toFile(`${filesDirectory}/${fileName}`)
@@ -64,7 +64,10 @@ router.post('/user/avatar', auth, upload.single('avatar'), async (req, res) => {
 
 // GET PROFILE
 router.get('/user/profile', auth, (req, res) => {
-   res.status(200).send(req.user)
+   res.status(200).send({
+      ...req.user,
+      avatar : `http://localhost:2020/user/avatar/${req.user.username}` 
+   })
 })
 
 // GET AVATAR
@@ -203,14 +206,20 @@ router.post('/user/login', (req, res) => {
 ///////////////
 
 // UPDATE USER
-router.patch('/user/profile', auth, (req, res) => {
+router.patch('/user/profile', auth, upload.single('avatar'), (req, res) => {
    const sql = `UPDATE users SET ? WHERE id = ? `
+
+   // jika password string kosong -> hapus
+   // jika tidak -> bcrypt
+
+   req.body.password ? req.body.password = bcrypt.hashSync(req.body.password, 8) : delete req.body.password
+
+
+   // req.body = { name, email, password }
    const data = [req.body, req.user.id]
    // hash => Asynchronous , then catch, async await
    // hashSync =>  Synchronous
                       
-   if(req.body.password) req.body.password = bcrypt.hashSync(req.body.password, 8) 
-
    conn.query(sql, data, (err, result) => {
       if(err) return res.send(err)
 

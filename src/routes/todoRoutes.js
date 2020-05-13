@@ -40,7 +40,7 @@ router.patch('/todo/:todoid', auth, (req, res) => {
    // Dimana array tersebut berisi data yang akan me-replace tanda tanya yang ada. Urutan itu diperhitungkan
    const data = [req.body, req.params.todoid, req.user.id]
 
-   conn.query(sql, data, (error, result) => {
+   conn.query(sql, data, (err, result) => {
       if(err) return res.send(err.sqlMessage)
 
       res.send({
