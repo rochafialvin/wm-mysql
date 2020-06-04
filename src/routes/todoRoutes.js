@@ -11,9 +11,9 @@ router.post('/todo', auth, (req, res) => {
 
    conn.query(sql, data, (err, result) => {
       // Jika terjadi masalah ketika running sql nya.
-      if(err) return res.send(err.sqlMessage)
+      if(err) return res.status(500).send(err.sqlMessage)
 
-      res.send({
+      res.status(200).send({
          message : 'Todo baru berhasil dibuat',
          id : result.insertId
       })
@@ -27,9 +27,9 @@ router.get('/todo', auth, (req, res) => {
    const data = req.user.id
 
    conn.query(sql, data, (err, result) => {
-      if(err) return res.send(err.sqlMessage)
+      if(err) return res.status(500).send(err.sqlMessage)
 
-      res.send(result)
+      res.status(200).send(result)
    })
 })
 
@@ -41,9 +41,9 @@ router.patch('/todo/:todoid', auth, (req, res) => {
    const data = [req.body, req.params.todoid, req.user.id]
 
    conn.query(sql, data, (err, result) => {
-      if(err) return res.send(err.sqlMessage)
+      if(err) return res.status(500).send(err.sqlMessage)
 
-      res.send({
+      res.status(200).send({
          message: "Todo berhasil di update"
       })
    })
@@ -55,9 +55,9 @@ router.delete('/todo/:todoid', auth, (req, res) => {
    const data = [req.params.todoid, req.user.id]
 
    conn.query(sql, data, (err, result) => {
-      if(err) return res.send(err.sqlMessage)
+      if(err) return res.status(500).send(err.sqlMessage)
 
-      res.send({
+      res.status(200).send({
          message: "Todo berhasil di hapus"
       })
    })

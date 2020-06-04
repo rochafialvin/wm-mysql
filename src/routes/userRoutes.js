@@ -82,7 +82,7 @@ router.get('/user/avatar/:username', (req, res) => {
    conn.query(sql, (err, result) => {
 
       // Jika ada error saat running sql
-      if(err) return res.send(err)
+      if(err) return res.status(500).send(err)
 
       
       try {
@@ -97,12 +97,12 @@ router.get('/user/avatar/:username', (req, res) => {
          // alamatFolder/namaFile, cbfunction
          res.sendFile(`${filesDirectory}/${fileName}`, (err) => {
             // Mengirim object error jika terjadi masalah
-            if(err) return res.send(err)
+            if(err) return res.status(200).send(err)
 
 
          })
       } catch (err) {
-         res.send(err)
+         res.status(500).send(err)
       }
 
    })
@@ -113,9 +113,9 @@ router.get('/verify/:userid', (req, res) => {
    const sql = `UPDATE users SET verified = true WHERE id = ${req.params.userid}`
 
    conn.query(sql, (err, result) => {
-      if(err) return res.send(err.sqlMessage)
+      if(err) return res.status(500).send(err.sqlMessage)
 
-      res.send('<h1>Verikasi Berhasil</h1>')
+      res.status(200).send('<h1>Verikasi Berhasil</h1>')
    })
 })
 
@@ -134,7 +134,7 @@ router.post('/register', (req, res) => {
    // Chek format email
    // valid = true or false
    let valid = validator.isEmail(data.email)
-   if(!valid) return res.send('Email tidak valid')
+   if(!valid) return res.status(400).send({message : 'Email tidak valid'})
 
    // Hash password
    data.password = bcrypt.hashSync(data.password, 8)
@@ -166,32 +166,32 @@ router.post('/user/login', (req, res) => {
 
    conn.query(sql, (err, result) => {
       // Cek error
-      if(err) return res.send(err)
+      if(err) return res.status(500).send(err)
 
       // result = [ {} ]
       let user = result[0]
       // Jika username tidak ditemukan
-      if(!user) return res.send('username tidak ditemukan')
+      if(!user) return res.status(404).send({message: 'username tidak ditemukan'})
       // Verifikasi password
       let validPassword = bcrypt.compareSync(password, user.password)
       // Jika user memasukkan password yang salah
-      if(!validPassword) return res.send('password tidak valid')
+      if(!validPassword) return res.status(400).send({message: 'password tidak valid'})
       // Verikasi status verified
-      if(!user.verified) return res.send('Anda belum terverifikasi')
+      if(!user.verified) return res.status(401).send({message: 'Anda belum terverifikasi'})
       // Membuat token
       let token = jwt.sign({ id: user.id}, 'fresh-rain890')
       // Property user_id dan token merupakan nama kolom yang ada di tabel 'tokens'
       const data = {user_id : user.id, token : token}
 
       conn.query(sql2, data, (err, result) => {
-         if(err) return res.send(err)
+         if(err) return res.status(500).send(err)
 
          // Menghapus beberapa property
          delete user.password
          delete user.avatar
          delete user.verified
 
-         res.send({
+         res.status(200).send({
             message: 'Login berhasil',
             user,
             token
@@ -221,9 +221,9 @@ router.patch('/user/profile', auth, upload.single('avatar'), (req, res) => {
    // hashSync =>  Synchronous
                       
    conn.query(sql, data, (err, result) => {
-      if(err) return res.send(err)
+      if(err) return res.status(500).send(err)
 
-      res.send({
+      res.status(200).send({
          message : "Update berhasil",
          result
       })
